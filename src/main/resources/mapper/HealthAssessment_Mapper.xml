@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.easy.dao.IHealthAssessmentDao">
+
+
+	<insert id="addHealthAssessment">
+		insert into HealthAssessment(member_id,assessmentData,assessmentDate) 
+		value(#{member_id},#{assessmentData},now())
+	</insert>
+	
+	<update id="delHealthAssessment">
+		update HealthAssessment set is_del=1 where id=#{id}
+	</update>
+	
+	<update id="editHealthAssessment">
+		update HealthAssessment 
+		<set>
+			assessmentDate=now(),
+			<if test='assessmentData!=null and assessmentData!=""'>
+				assessmentData=#{assessmentData},
+			</if>
+		</set>
+		<where>
+		 	id=#{id} and is_del=0
+		</where>
+	</update>
+	
+	<select id="getHealthAssessment"  resultType="com.easy.bean.HealthAssessment">
+		select * from HealthAssessment
+		<where>
+			is_del=0
+		</where>
+	</select>
+	
+	
+	
+	
+</mapper>

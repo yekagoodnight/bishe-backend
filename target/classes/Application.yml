@@ -1,0 +1,28 @@
+# spring boot的主配置文件
+spring.mvc.view.prefix: /WEB-INF/jsp/
+spring.mvc.view.suffix: .jsp
+#spring.mvc.view.prefix: /html/
+#spring.mvc.view.suffix: .html
+#配置mybatis的数据源 DataSource
+spring: 
+  datasource: 
+    url: jdbc:mysql://localhost:3306/gymdata
+    username: root
+    password: tcwjy2021
+    driver-class-name: com.mysql.cj.jdbc.Driver
+mybatis:
+  mapper-locations: classpath*:/mapper/*.xml
+#配置后，MyBatis在初始化时会自动扫描并加载这些XML文件，使你可以利用其中定义的SQL映射语句和操作。
+#debug日志打印在控制台
+logging:
+  level:
+    com.easy.dao: debug
+    
+#配置静态地址
+#
+easy:
+  static:
+    path: img
+    dir: D:\\uploadfile
+    
+# 对类起别名

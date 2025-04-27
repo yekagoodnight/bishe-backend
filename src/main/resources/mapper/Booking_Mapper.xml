@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.easy.dao.IBookingDao">
+
+
+	<insert id="addBooking" useGeneratedKeys="true" keyColumn="id" keyProperty="id">
+		insert into member_course_booking(member_id,course_id,payment,bookingDate) 
+		value(#{member_id},#{course_id},#{payment},#{bookingDate})
+	</insert>
+	
+	<update id="delBooking">
+		update member_course_booking set is_del=1 where id=#{id}
+	</update>
+	
+	
+	<update id="editBooking">
+		update member_course_booking 
+		<set>
+			<if test='member_id!=null and member_id!=0'>
+				member_id=#{member_id},
+			</if>
+			<if test='course_id!=null and course_id!=0'>
+				course_id=#{course_id},
+			</if>
+			<if test='payment!=null and payment!=0'>
+				payment=#{payment},
+			</if>
+			<if test='bookingDate!=null and bookingDate!=""'>
+				bookingDate=#{bookingDate},
+			</if>
+			<if test='state!=null and state!=""'>
+				state=#{state},
+			</if>
+		</set>
+		<where>
+		 	id=#{id} and is_del=0
+		</where>
+	</update>
+	
+	<!-- <select id="getMemberCourseBooking"  resultType="com.easy.bean.MemberCourseBooking">
+		select * from member_course_booking
+		<where>
+			is_del=0
+			<if test='id!=null and id!=0'>
+				and id=#{id}
+			</if>
+			<if test="state !=null and state !=''">
+				<bind value="'%'+state+'%'" name="liketext"></bind>
+				and state like #{liketext}
+			</if>
+		</where>
+	</select> -->
+	<select id="getUserOptions" resultType="java.util.HashMap">
+	  SELECT u.name, m.id FROM user u
+	  JOIN member m ON u.id = m.user_id
+	  where u.role='member' and u.is_del=0 and m.is_del=0
+	</select>
+	<select id="getCourseOptions" resultType="java.util.HashMap">
+	  SELECT name,id from course where is_del=0 and state != '已结束'
+	</select>
+	
+	
+	
+	<select id="getMemberId" resultType="int">
+		select m.id from user u
+		left join member m on u.id=m.user_id
+		where u.name=#{name} and u.is_del=0 and m.is_del=0
+	</select>
+	<select id="getCourseId" resultType="int">
+		select c.id from course c
+		where c.name=#{name} and c.is_del=0
+	</select>
+	<resultMap id="getNames" type="com.easy.bean.Booking">
+    <!-- 映射 Course 的字段 -->
+
+    <id property="id" column="id" />
+    <result property="member_id" column="member_id" />
+    <result property="course_id" column="course_id" />
+    <result property="payment" column="payment" />
+    <result property="bookingDate" column="bookingDate" />
+    <result property="state" column="state" />
+    <result property="user_id" column="user_id" />
+    <result property="user_name" column="user_name" />
+    <result property="course_name" column="course_name" />
+
+	</resultMap>
+	
+	<select id="getBooking" resultMap="getNames">
+    select
+        mcb.id,
+        mcb.member_id,
+        mcb.course_id,
+        mcb.payment,
+        mcb.bookingDate,
+        u.id as user_id,
+        u.name as user_name,
+        c.id as course_id,
+        c.name as course_name,
+        c.state as state
+	    FROM member_course_booking mcb
+		LEFT JOIN member m ON mcb.member_id = m.id
+		LEFT JOIN user u ON m.user_id = u.id
+		LEFT JOIN course c ON mcb.course_id = c.id
+    <where>
+        mcb.is_del=0 
+        <if test='booking.id!=null and booking.id!=0'>
+            and mcb.id=#{booking.id}
+        </if>
+        <if test="booking.state !=null and booking.state !=''">
+			<bind value="'%'+booking.state+'%'" name="liketext"></bind>
+			and mcb.state like #{liketext}
+		</if>
+		<if test="booking.user_name !=null and booking.user_name !=''">
+			<bind value="'%'+booking.user_name+'%'" name="likeusertext"></bind>
+			and u.name like #{likeusertext}
+		</if>
+		<if test="booking.course_name !=null and booking.course_name !=''">
+			<bind value="'%'+booking.course_name+'%'" name="likecoursetext"></bind>
+			and c.name like #{likecoursetext}
+		</if>
+		<if test="page.page>=0 and page.size>0">
+			limit #{page.start},#{page.size}
+		</if>
+    </where>
+</select>
+	
+</mapper>

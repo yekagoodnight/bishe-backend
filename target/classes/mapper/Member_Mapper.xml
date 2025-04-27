@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.easy.dao.IMemberDao">
+
+
+	<insert id="addMember" useGeneratedKeys="true" keyColumn="id" keyProperty="id">
+		insert into Member(user_id,startDate,points,state) 
+		value(#{user_id},#{startDate},#{points},#{state})
+	</insert>
+	
+	
+	<update id="delMember">
+		update Member set is_del=1 where id=#{id}
+	</update>
+	
+	<update id="editMember" >
+		update Member 
+		<set>
+			<if test='startDate!=null and startDate!=""'>
+				startDate=#{startDate},
+			</if>
+			<if test='points!=null and points !=0'>
+				points=#{points},
+			</if>
+			<if test='state!=null and state !=""'>
+				state=#{state},
+			</if>
+		</set>
+		<where>
+		 	id=#{id}
+		</where>
+	</update>
+	
+	<select id="getMemberOptions" resultType="java.util.HashMap">
+	  SELECT name, id  from user where id not in (select user_id from member where is_del=0) and role='member' and is_del=0
+	</select>
+	
+	<select id="getMemberByUserId"  resultType="com.easy.bean.Member">
+		select * from Member
+		<where>
+			is_del=0
+				and user_id=#{user_id}		
+		</where>
+	</select>
+	<!-- <select id="getMember"  resultType="com.easy.bean.Member">
+		select * from Member
+		<where>
+			is_del=0
+			<if test='id!=null and id!=0'>
+				and id=#{id}
+			</if>
+			<if test="state !=null and state !=''">
+				<bind value="'%'+state+'%'" name="liketext"></bind>
+				and state like #{liketext}
+			</if>
+			
+		</where>
+	</select> -->
+	
+	<resultMap id="getName" type="com.easy.bean.Member">
+    <!-- 映射 Course 的字段 -->
+    <id property="id" column="id" />
+    <result property="user_id" column="user_id" />
+    <result property="startDate" column="startDate" />
+	<result property="points" column="points" />
+    <result property="state" column="state" />
+    <result property="user_name" column="user_name" />
+    <result property="user_phone" column="user_phone" />
+	</resultMap>
+	
+	<select id="getMember" resultMap="getName">
+    select
+        m.id,
+        m.user_id,
+        m.startDate,
+        m.points,
+        m.state,
+        u.name as user_name,
+        u.phone as user_phone
+	    FROM member m
+		LEFT JOIN User u ON m.user_id = u.id
+    <where>
+        m.is_del=0 
+        <if test='member.id!=null and member.id!=0'>
+			and m.id=#{member.id}
+		</if>
+		<if test="member.state !=null and member.state !=''">
+			<bind value="'%'+member.state+'%'" name="liketext"></bind>
+			and m.state like #{liketext}
+		</if>
+		<if test="member.user_name !=null and member.user_name !=''">
+			<bind value="'%'+ member.user_name +'%'" name="likenametext"></bind>
+			and u.name like #{likenametext}
+		</if>
+		<if test="page.page>=0 and page.size>0">
+			limit #{page.start},#{page.size}
+		</if>
+		
+    </where>
+</select>
+	
+</mapper>

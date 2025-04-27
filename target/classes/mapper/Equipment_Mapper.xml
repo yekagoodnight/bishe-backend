@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.easy.dao.IEquipmentDao">
+
+
+	<insert id="addEquipment"  useGeneratedKeys="true" keyColumn="id" keyProperty="id">
+		insert into Equipment(name,purchaseDate,maintenanceCycle) 
+		value(#{name},#{purchaseDate},#{maintenanceCycle})
+	</insert>
+	
+	<update id="delEquipment">
+		update Equipment set is_del=1 where id=#{id}
+	</update>
+	
+	<update id="editEquipment">
+		update Equipment 
+		<set>
+			<if test='name!=null and name!=""'>
+				name=#{name},
+			</if>
+			<if test='purchaseDate!=null and purchaseDate!=""'>
+				purchaseDate=#{purchaseDate},
+			</if>
+			<if test='maintenanceCycle!=null and maintenanceCycle!=0'>
+				maintenanceCycle=#{maintenanceCycle}
+			</if>
+		</set>
+		<where>
+		 	id=#{id} and is_del=0
+		</where>
+	</update>
+	
+	<select id="getContain" resultType="int">
+		select id from equipmentstate where equip_id=#{id} and is_del=0
+		union select id from maintenance where equip_id=#{id} and is_del=0
+	</select>
+	
+	<select id="getEquipment"  resultType="com.easy.bean.Equipment">
+		select * from Equipment
+		<where>
+			is_del=0
+			<if test='equipment.id!=null and equipment.id!=0'>
+				and id=#{equipment.id}
+			</if>
+			<if test="equipment.name !=null and equipment.name !=''">
+				<bind value="'%'+equipment.name+'%'" name="liketext"></bind>
+				and name like #{liketext}
+			</if>
+			<if test="page.page>=0 and page.size>0">
+				limit #{page.start},#{page.size}
+			</if>
+		</where>
+	</select>
+	
+	
+	
+	
+</mapper>

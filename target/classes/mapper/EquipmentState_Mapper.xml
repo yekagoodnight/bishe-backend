@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.easy.dao.IEquipmentStateDao">
+
+
+	<insert id="addEquipmentState"  useGeneratedKeys="true" keyColumn="id" keyProperty="id">
+		insert into EquipmentState(equip_id,currentState,employee_id,checkDate) 
+		value(#{equip_id},#{currentState},#{employee_id},#{checkDate})
+	</insert>
+	
+	<update id="delEquipmentState">
+		update EquipmentState set is_del=1 where id=#{id}
+	</update>
+	
+	<update id="editEquipmentState">
+		update EquipmentState 
+		<set>
+			<if test='currentState!=null and currentState != "" '>
+				currentState=#{currentState},
+			</if>
+			<if test='checkDate!=null and checkDate!="" '>
+				checkDate=#{checkDate},
+			</if>
+			<if test='equip_id!=null and equip_id != 0 '>
+				equip_id=#{equip_id},
+			</if>
+			<if test='employee_id!=null and employee_id!="" '>
+				employee_id=#{employee_id},
+			</if>
+		</set>
+		<where>
+		 	id=#{id} and is_del=0
+		</where>
+	</update>
+	
+	<!-- <select id="getEquipmentState"  resultType="com.easy.bean.EquipmentState">
+		select * from EquipmentState
+		<where>
+			is_del=0
+			<if test='id!=null and id!=0'>
+				and id=#{id}
+			</if>
+		</where>
+	</select> -->
+
+	<select id="getEmployeeId" resultType="int">
+		select e.id from employee e
+		left join user u on u.id=e.user_id
+		where u.name=#{name} and e.is_del=0
+	</select>
+	<select id="getEquipId" resultType="int">
+		select id from equipment 
+		where name=#{name} and is_del=0
+	</select>
+	
+	<select id="getUserOptions" resultType="java.util.HashMap">
+	  SELECT u.name, e.id FROM user u
+	  JOIN employee e ON u.id = e.user_id
+	  where u.role !='member' and e.is_del=0 and u.is_del=0
+	</select>
+	<select id="getEquipOptions" resultType="java.util.HashMap">
+	  SELECT name,id from equipment where is_del=0
+	</select>
+	
+	
+	<resultMap id="getName" type="com.easy.bean.EquipmentState">
+    <!-- 映射 Course 的字段 -->
+    <id property="id" column="id" />
+    <result property="equip_id" column="equip_id" />
+    <result property="currentState" column="currentState" />
+	<result property="employee_id" column="employee_id" />
+	<result property="checkDate" column="checkDate" />
+    <result property="user_name" column="user_name" />
+    <result property="equip_name" column="equip_name" />
+
+	</resultMap>
+	<select id="getEquipmentState" resultMap="getName">
+    select
+    	es.id,
+        es.equip_id,
+        es.currentState,
+        es.employee_id,
+        es.checkDate,
+        u.id as user_id,
+        u.name as user_name,
+        eq.id as equip_id,
+        eq.name as equip_name
+	    FROM EquipmentState es
+	    LEFT JOIN employee e ON es.employee_id = e.id
+		LEFT JOIN User u ON e.user_id = u.id
+		LEFT JOIN equipment eq ON es.equip_id = eq.id
+    <where>
+        es.is_del=0 
+        <if test='equipmentState.id!=null and equipmentState.id!=0'>
+            and es.id=#{equipmentState.id}
+        </if>
+        <if test="page.page>=0 and page.size>0">
+			limit #{page.start},#{page.size}
+		</if>
+    </where>
+</select>
+	
+	<resultMap id="getByTime" type="com.easy.bean.EquipmentState">
+    <!-- 映射 Course 的字段 -->
+    <id property="id" column="id" />
+    <result property="equip_id" column="equip_id" />
+    <result property="currentState" column="currentState" />
+	<result property="employee_id" column="employee_id" />
+	<result property="checkDate" column="checkDate" />
+    <result property="user_name" column="user_name" />
+    <result property="equip_name" column="equip_name" />
+
+	</resultMap>
+	<select id="getStateByDate" resultMap="getByTime" parameterType="map" >
+	  SELECT 
+	  es.id,
+        es.equip_id,
+        es.currentState,
+        es.employee_id,
+        es.checkDate,
+        u.id as user_id,
+        u.name as user_name,
+        eq.id as equip_id,
+        eq.name as equip_name
+	    FROM EquipmentState es
+	    LEFT JOIN employee e ON es.employee_id = e.id
+		LEFT JOIN User u ON e.user_id = u.id
+		LEFT JOIN equipment eq ON es.equip_id = eq.id
+	  <where>
+	  	es.is_del = 0
+		<choose>
+			<when test='map.startDate != null and map.endDate != null'>
+				AND es.checkDate BETWEEN #{map.startDate} AND #{map.endDate}
+			</when>
+			<when test='map.startDate != null'>AND es.checkDate >= #{map.startDate}</when>
+			<when test='map.endDate != null'>AND es.checkDate &lt; #{map.endDate}</when>
+			<otherwise></otherwise>
+		</choose>
+		<if test="map.equip_name !=null and map.equip_name !=''">
+			<bind value="'%'+ map.equip_name +'%'" name="likenametext"></bind>
+			and eq.name like #{likenametext}
+		</if>
+		<if test="page.page>=0 and page.size>0">
+			limit #{page.start},#{page.size}
+		</if>
+	  </where>
+	</select>
+	
+</mapper>

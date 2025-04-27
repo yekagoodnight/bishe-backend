@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.easy.dao.IMaintenanceDao">
+
+
+	<insert id="addMaintenance"  useGeneratedKeys="true" keyColumn="id" keyProperty="id">
+		insert into Maintenance(equip_id,state,startDate,endDate,employee_id) 
+		value(#{equip_id},#{state},#{startDate},#{endDate},#{employee_id})
+	</insert>
+	
+	<update id="delMaintenance">
+		update Maintenance set is_del=1 where id=#{id}
+	</update>
+	
+	<update id="editMaintenance">
+		update Maintenance 
+		<set>
+			<if test='equip_id!=null and equip_id!=0'>
+				equip_id=#{equip_id},
+			</if>
+			<if test='employee_id!=null and employee_id!=0'>
+				employee_id=#{employee_id},
+			</if>
+			<if test='startDate!=null and startDate!=""'>
+				startDate=#{startDate},
+			</if>
+			<if test='endDate!=null and endDate!=""'>
+				endDate=#{endDate},
+			</if>
+			<if test='state!=null and state!=""'>
+				state=#{state},
+			</if>
+		</set>
+		<where>
+		 	id=#{id} and is_del=0
+		</where>
+	</update>
+	
+	<!-- <select id="getMaintenance"  resultType="com.easy.bean.Maintenance">
+		select * from Maintenance
+		<where>
+			is_del=0
+			<if test='id!=null and id!=0'>
+				and id=#{id}
+			</if>
+		</where>
+	</select> -->
+	<select id="getUserOptions" resultType="java.util.HashMap">
+	  SELECT u.name, e.id FROM user u
+	  JOIN employee e ON u.id = e.user_id
+	  where e.position='维修工' and u.is_del=0 and e.is_del=0
+	</select>
+	<select id="getEquipOptions" resultType="java.util.HashMap">
+	  SELECT name,id from equipment where is_del=0
+	</select>
+
+	<resultMap id="getByTime" type="com.easy.bean.Maintenance">
+    <!-- 映射 Course 的字段 -->
+     <id property="id" column="id" />
+    <result property="equip_id" column="equip_id" />
+    <result property="state" column="state" />
+    <result property="startDate" column="startDate" />
+	<result property="endDate" column="endDate" />
+	<result property="employee_id" column="employee_id" />
+    <result property="user_name" column="user_name" />
+    <result property="equip_name" column="equip_name" />
+
+	</resultMap>
+	<select id="getRecordByDate" resultMap="getByTime" parameterType="map" >
+	  SELECT 
+	  main.id,
+        main.id,
+        main.equip_id,
+        main.state,
+        main.startDate,
+        main.endDate,
+        main.employee_id,
+        u.id as user_id,
+        u.name as user_name,
+        eq.id as equip_id,
+        eq.name as equip_name
+	    FROM maintenance main
+	    LEFT JOIN employee e ON main.employee_id = e.id
+		LEFT JOIN User u ON e.user_id = u.id
+		LEFT JOIN equipment eq ON main.equip_id = eq.id
+	  <where>
+	  	main.is_del = 0
+		<choose>
+			<when test='map.startDate != null and map.endDate != null'>
+				AND main.startDate >= #{map.startDate} AND main.endDate &lt; #{map.endDate}
+			</when>
+			<when test='map.startDate != null'>AND main.startDate >= #{map.startDate}</when>
+			<when test='map.endDate != null'>AND main.endDate &lt; #{map.endDate}</when>
+			<otherwise></otherwise>
+		</choose>
+		<if test="map.equip_name !=null and map.equip_name !=''">
+			<bind value="'%'+ map.equip_name +'%'" name="likenametext"></bind>
+			and eq.name like #{likenametext}
+		</if>
+		<if test="page.page>=0 and page.size>0">
+			limit #{page.start},#{page.size}
+		</if>
+	  </where>
+	</select>
+	
+	
+	
+	<select id="getEmployeeId" resultType="int">
+		select e.id from employee e
+		left join user u on u.id=e.user_id
+		where u.name=#{name} and e.position='维修工' and e.is_del=0 and u.is_del=0
+	</select>
+	<select id="getEquipId" resultType="int">
+		select id from equipment 
+		where name=#{name} and is_del=0
+	</select>
+	
+	<resultMap id="getName" type="com.easy.bean.Maintenance">
+    <!-- 映射 Course 的字段 -->
+    <id property="id" column="id" />
+    <result property="equip_id" column="equip_id" />
+    <result property="state" column="state" />
+    <result property="startDate" column="startDate" />
+	<result property="endDate" column="endDate" />
+	<result property="employee_id" column="employee_id" />
+    <result property="user_name" column="user_name" />
+    <result property="equip_name" column="equip_name" />
+	</resultMap>
+	<select id="getMaintenance" resultMap="getName">
+    select  
+    	main.id,
+        main.equip_id,
+        main.state,
+        main.startDate,
+        main.endDate,
+        main.employee_id,
+        u.id as user_id,
+        u.name as user_name,
+        eq.id as equip_id,
+        eq.name as equip_name
+	    FROM maintenance main
+	    LEFT JOIN employee e ON main.employee_id = e.id
+		LEFT JOIN User u ON e.user_id = u.id
+		LEFT JOIN equipment eq ON main.equip_id = eq.id
+    <where>
+        main.is_del=0 
+        <if test='maintenance.id!=null and maintenance.id!=0'>
+            and main.id=#{maintenance.id}
+        </if>
+        <if test="page.page>=0 and page.size>0">
+			limit #{page.start},#{page.size}
+		</if>
+    </where>
+</select>
+	
+</mapper>

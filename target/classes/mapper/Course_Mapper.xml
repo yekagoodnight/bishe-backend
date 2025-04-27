@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.easy.dao.ICourseDao">
+
+
+	<insert id="addCourse" useGeneratedKeys="true" keyColumn="id" keyProperty="id">
+		insert into Course(name,description,capacity,trainer_id,startTime,endTime,price) 
+		value(#{name},#{description},0,#{trainer_id},#{startTime},#{endTime},#{price})
+	</insert>
+	
+	<update id="delCourse">
+		update Course set is_del=1 where id=#{id}
+	</update>
+	
+	<update id="editCourse">
+		update Course 
+		<set>
+			<if test='name!=null and name!=""'>
+				name=#{name},
+			</if>
+			<if test='description!=null and description!=""'>
+				description=#{description},
+			</if>
+			<if test='capacity!=null and capacity!=""'>
+				capacity=#{capacity},
+			</if>
+			<if test='trainer_id!=null and trainer_id!=""'>
+				trainer_id=#{trainer_id},
+			</if>
+			<if test='startTime!=null and startTime!=""'>
+				startTime=#{startTime},
+			</if>
+			<if test='endTime!=null and endTime!=""'>
+				endTime=#{endTime},
+			</if>
+			<if test='state!=null and state!=""'>
+				state=#{state},
+			</if>
+			<if test='price!=null and price!=0'>
+				price=#{price},
+			</if>
+		</set>
+		<where>
+		 	id=#{id} and is_del=0
+		</where>
+	</update>
+	<update id="addNum">
+		update Course set capacity=capacity+1 where id=#{id}
+	</update>
+	<update id="reduceNum">
+		update Course set capacity=capacity-1 where id=#{id}
+	</update>
+	
+	<resultMap id="courseAndTrainer" type="com.easy.bean.Course">
+    <!-- 映射 Course 的字段 -->
+    <id property="id" column="id" />
+    <result property="name" column="name" />
+    <result property="description" column="description" />
+    <result property="capacity" column="capacity" />
+    <result property="trainer_id" column="trainer_id" />
+    <result property="startTime" column="startTime" />
+    <result property="endTime" column="endTime" />
+    <result property="price" column="price" />
+    <result property="state" column="state" />
+	<result property="user_id" column="user_id" />
+    <result property="user_name" column="user_name" />
+	</resultMap>
+	
+	<select id="getUserOptions" resultType="java.util.HashMap">
+	  SELECT u.name, t.id FROM user u
+	  JOIN employee e ON u.id = e.user_id
+	  join trainer t on t.employee_id=e.id
+	  where e.position ='教练' and e.is_del=0 and u.is_del=0 and t.is_del=0
+	</select>
+	
+	<select id="getContain" resultType="int">
+		select id from member_course_booking where course_id=#{id} and is_del=0
+	</select>
+	
+	<select id="getTrainerId" resultType="int">
+		select t.id from user u
+		left join employee e on u.id=e.user_id
+		left join trainer t on t.employee_id=e.id
+		where u.name=#{name} and t.is_del=0 and e.is_del=0
+	</select>
+	<select id="getCourse" resultMap="courseAndTrainer">
+    select 
+        c.id,
+        c.name,
+        c.description,
+        c.capacity,
+        c.trainer_id,
+        c.startTime,
+        c.endTime,
+        c.price,
+        c.state,
+        u.id as user_id,
+        u.name as user_name
+        
+	    FROM Course c
+		LEFT JOIN Trainer t ON c.trainer_id = t.id
+		LEFT JOIN employee e ON t.employee_id = e.id
+		LEFT JOIN User u ON e.user_id = u.id
+    <where>
+        c.is_del=0 
+        <if test='course.id!=null and course.id!=0'>
+            and c.id=#{course.id}
+        </if>
+        <if test="course.name !=null and course.name !=''">
+            <bind name="liketext" value="'%'+course.name+'%'"/>
+            and c.name like #{liketext}
+        </if>
+        <if test="page.page>=0 and page.size>0">
+			limit #{page.start},#{page.size}
+		</if>
+    </where>
+</select>
+	
+    
+
+
+	
+	<!-- <select id="getCourse"  resultType="com.easy.bean.Course">
+		select a.id, a.name,a.description,a.capacity,
+		a.trainer_id,a.startTime,a.endTime,a.price,a.state,b.name
+		from Course as a 
+		left join Trainer as b on a.trainer_id = b.id
+		<where>
+			is_del=0
+			<if test='id!=null and id!=0'>
+				and id=#{id}
+			</if>
+			<if test="name !=null and name !=''">
+				<bind value="'%'+name+'%'" name="liketext"></bind>
+				and name like #{liketext}
+			</if>
+		</where>
+	</select> -->
+	
+	
+	
+	
+</mapper>

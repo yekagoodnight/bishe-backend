@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.easy.dao.IEmployeeDao">
+
+
+	<insert id="addEmployee"  useGeneratedKeys="true" keyColumn="id" keyProperty="id">
+		insert into Employee(user_id,position,salary,hireDate) 
+		value(#{user_id},#{position},#{salary},#{hireDate})
+	</insert>
+	
+	<update id="delEmployee">
+		update employee set is_del=1 where id=#{id}
+	</update>
+	
+	<update id="editEmployee">
+		update employee 
+		<set>
+			<if test='position!=null and position!=""'>
+				position=#{position},
+			</if>
+			<if test='salary!=null and salary!=0'>
+				salary=#{salary},
+			</if>
+			<if test='user_id !=null and user_id !=0'>
+				user_id=#{user_id},
+			</if>
+			<if test='hireDate!=null and hireDate!=""'>
+				hireDate=#{hireDate},
+			</if>
+		</set>
+		<where>
+		 	id=#{id} and is_del=0
+		</where>
+	</update>
+	
+	<!-- <select id="getEmployee"  resultType="com.easy.bean.Employee">
+		select * from employee
+		<where>
+			is_del=0
+			<if test='id!=null and id!=0'>
+				and id=#{id}
+			</if>
+			<if test="position !=null and position !=''">
+				<bind value="'%'+position+'%'" name="liketext"></bind>
+				and position like #{liketext}
+			</if>
+			
+		</where>
+	</select> -->
+	
+	<resultMap id="getName" type="com.easy.bean.Employee">
+    <!-- 映射 Course 的字段 -->
+    <id property="id" column="id" />
+    <result property="user_id" column="user_id" />
+    <result property="position" column="position" />
+	<result property="salary" column="salary" />
+    <result property="hireDate" column="hireDate" />
+    <result property="user_name" column="user_name" />
+    <result property="user_phone" column="user_phone" />
+	</resultMap>
+	
+	<select id="getEmployeeOptions" resultType="java.util.HashMap">
+	  SELECT name, id  from user where id not in (select user_id from employee where is_del =0) and role !='member' and is_del=0
+	</select>
+	
+	<select id="getTrainContain" resultType="int">
+		select id from trainer where employee_id=#{id} and is_del=0
+	</select>
+	<select id="getWeiContain" resultType="int">
+		select id from equipmentstate where employee_id=#{id} and is_del=0
+		UNION  select id from maintenance where employee_id=#{id} and is_del=0
+	</select>
+
+	<select id="getEmployee" resultMap="getName">
+    select
+        e.id,
+        e.user_id,
+        e.position,
+        e.salary,
+        e.hireDate,
+        u.id as user_id,
+        u.name as user_name,
+        u.phone as user_phone
+	    FROM employee e
+		LEFT JOIN User u ON e.user_id = u.id
+    <where>
+        e.is_del=0 
+        <if test='employee.id!=null and employee.id!=0'>
+			and e.id=#{employee.id}
+		</if>
+		<if test="employee.position !=null and employee.position !=''">
+			<bind value="'%'+employee.position+'%'" name="liketext"></bind>
+			and e.position like #{liketext}
+		</if>
+		<if test="employee.user_name !=null and employee.user_name !=''">
+			<bind value="'%'+ employee.user_name +'%'" name="likenametext"></bind>
+			and u.name like #{likenametext}
+		</if>
+		<if test="page.page>=0 and page.size>0">
+			limit #{page.start},#{page.size}
+		</if>
+    </where>
+</select>
+	
+	
+</mapper>

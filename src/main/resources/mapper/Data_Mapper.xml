@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.easy.dao.IDataDao">
+
+	<select id="getUserData" resultType="java.util.HashMap">
+	  SELECT role name ,count(role) value from user GROUP BY role
+	</select>
+	
+	<select id="getCourseData" resultType="java.util.HashMap">
+	  SELECT name name ,capacity value from course
+	</select>
+	
+	<select id="getIncomeByMon" resultType="java.util.HashMap">
+	  SELECT
+	  	SUM(IF(MONTH(bookingDate) = 8, payment, 0)) AS `8月`,
+	  	SUM(IF(MONTH(bookingDate) = 7, payment, 0)) AS `7月`,
+	    SUM(IF(MONTH(bookingDate) = 6, payment, 0)) AS `6月`
+	    
+	    
+	  FROM
+	    member_course_booking
+	  WHERE
+	    is_del = 0 AND
+	    bookingDate <![CDATA[<=]]> '2024-08-31';
+	</select>
+	
+	<select id="getMainByMon" resultType="java.util.HashMap">
+	  SELECT
+		SUM(IF(MONTH(startDate) &lt; 6, 1, 0)) AS '5月以及之前',
+	    SUM(IF(MONTH(startDate) = 6, 1, 0)) AS '6月',
+	    SUM(IF(MONTH(startDate) = 7, 1, 0)) AS '7月',
+	    SUM(IF(MONTH(startDate) = 8, 1, 0)) AS '8月'
+	FROM
+	    maintenance
+	WHERE
+	    is_del = 0 AND
+	    startDate <![CDATA[<=]]> '2024-08-31';
+	</select>
+	
+</mapper>

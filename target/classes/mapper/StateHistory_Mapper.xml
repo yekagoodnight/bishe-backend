@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.easy.dao.IStateHistoryDao">
+
+
+	<insert id="addStateHistory"  useGeneratedKeys="true" keyColumn="id" keyProperty="id">
+		insert into state_history(member_id,suspensionStartDate,suspensionEndDate,suspensionReason) 
+		value(#{member_id},#{suspensionStartDate},#{suspensionEndDate},#{suspensionReason})
+	</insert>
+	
+	<update id="delStateHistory">
+		update state_history set is_del=1 where id=#{id}
+	</update>
+	
+	<update id="editStateHistory">
+		update state_history 
+		<set>
+			<if test='suspensionStartDate!=null and suspensionStartDate != "" '>
+				suspensionEndDate=#{suspensionEndDate},
+			</if>
+			<if test='suspensionEndDate!=null and suspensionEndDate != "" '>
+				suspensionEndDate=#{suspensionEndDate},
+			</if>
+			<if test='suspensionReason!=null and suspensionReason!="" '>
+				suspensionReason=#{suspensionReason},
+			</if>
+			<if test='member_id !=null and member_id !=0 '>
+				member_id=#{member_id},
+			</if>
+		</set>
+		<where>
+		 	id=#{id} and is_del=0
+		</where>
+	</update>
+	
+	<!-- <select id="getStateHistory"  resultType="com.easy.bean.StateHistory">
+		select * from state_history
+		<where>
+			is_del=0
+			<if test='id!=null and id!=0'>
+				and id=#{id}
+			</if>
+			<if test="member_id !=null and member_id !=0">
+				and member_id = #{member_id}
+			</if>
+			
+		</where>
+	</select> -->
+	<resultMap id="getName" type="com.easy.bean.StateHistory">
+    <!-- 映射 Course 的字段 -->
+    <id property="id" column="id" />
+    <result property="member_id" column="member_id" />
+    <result property="suspensionStartDate" column="suspensionStartDate" />
+	<result property="suspensionEndDate" column="suspensionEndDate" />
+    <result property="suspensionReason" column="suspensionReason" />
+    <result property="user_id" column="user_id" />
+    <result property="user_name" column="user_name" />
+     
+	</resultMap>
+	<select id="getStateHistory" resultMap="getName">
+    select 
+        sh.id,
+        sh.member_id,
+        sh.suspensionStartDate,
+        sh.suspensionEndDate,
+        sh.suspensionReason,
+        u.id as user_id,
+        u.name as user_name
+        
+	    FROM state_history sh
+	    LEFT JOIN member m ON sh.member_id = m.id
+		LEFT JOIN User u ON m.user_id = u.id
+    <where>
+        sh.is_del=0 
+        <if test='stateHistory.id!=null and stateHistory.id!=0'>
+			and sh.id=#{stateHistory.id}
+		</if>
+		<if test="stateHistory.member_id !=null and stateHistory.member_id !=0">
+			and sh.member_id = #{stateHistory.member_id}
+		</if>
+		<if test="page.page>=0 and page.size>0">
+			limit #{page.start},#{page.size}
+		</if>
+    </where>
+</select>
+	<select id="getMemberOptions" resultType="java.util.HashMap">
+	  SELECT u.name, m.id  from user u
+	  join member m on m.user_id=u.id
+	  where m.is_del=0
+	</select>
+	
+	<select id="getStateByDate" parameterType="map" resultType="com.easy.bean.StateHistory">
+	  SELECT * FROM state_history
+	  <where>
+	  	is_del = 0
+		<choose>
+			<when test='startDate != null and endDate != null'>
+				AND suspensionStartDate >= #{startDate} AND suspensionEndDate &lt; #{endDate}
+			</when>
+			<when test='startDate != null'>AND suspensionStartDate >= #{startDate}</when>
+			<when test='endDate != null'>AND suspensionEndDate &lt; #{endDate}</when>
+			<otherwise></otherwise>
+		</choose>
+	  </where>
+	</select>
+	
+	
+	
+	
+</mapper>

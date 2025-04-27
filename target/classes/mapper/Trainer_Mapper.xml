@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.easy.dao.ITrainerDao">
+
+
+	<insert id="addTrainer"  useGeneratedKeys="true" keyColumn="id" keyProperty="id">
+		insert into Trainer(employee_id,specialty) 
+		value(#{employee_id},#{specialty})
+	</insert>
+	
+	
+	<update id="delTrainer">
+		update Trainer set is_del=1 where id=#{id}
+	</update>
+	
+	
+	<update id="editTrainer">
+		update Trainer 
+		<set>
+			<if test='specialty!=null and specialty !=""'>
+				specialty=#{specialty},
+			</if>
+			<if test='employee_id !=null and employee_id !=""'>
+				employee_id=#{employee_id},
+			</if>
+		</set>
+		<where>
+		 	id=#{id} and is_del=0
+		</where>
+	</update>
+	
+	<!-- <select id="getTrainer"  resultType="com.easy.bean.Trainer">
+		select * from Trainer
+		<where>
+			is_del=0
+			<if test='id !=null and id !=0'>
+				and id=#{id}
+			</if>
+			<if test="specialty !=null and specialty !=''">
+				<bind value="'%'+ specialty +'%'" name="liketext"></bind>
+				and specialty like #{liketext}
+			</if>
+		</where>
+	</select> -->
+	
+	<select id="getTrainerOptions" resultType="java.util.HashMap">
+	  select u.name, e.id from employee e
+		left join user u on e.user_id=u.id
+		where e.id not in (select employee_id from trainer where is_del=0) 
+			and e.is_del=0 and e.position='教练'
+	</select>
+	
+	<select id="getTrainerByUserId"  resultType="com.easy.bean.Trainer">
+		select * from Member
+		<where>
+			is_del=0
+				and user_id=#{user_id}		
+		</where>
+	</select>
+	
+	<select id="getEmployeeId" resultType="int">
+		select e.id from employee e
+		left join user u on e.user_id=u.id
+		where u.name=#{name} 
+	</select>
+	<select id="getContain" resultType="int">
+		select id from course where trainer_id=#{id} and is_del=0
+	</select>
+	
+	<resultMap id="getName" type="com.easy.bean.Trainer">
+    <!-- 映射 Course 的字段 -->
+    <id property="id" column="id" />
+    <result property="employee_id" column="employee_id" />
+    <result property="specialty" column="specialty" />
+	<result property="user_name" column="user_name" />
+	</resultMap>
+	
+	<select id="getTrainer" resultMap="getName">
+    select
+        t.id,
+        t.employee_id,
+        t.specialty,
+        u.id as user_id,
+        u.name as user_name
+        
+	    FROM Trainer t
+	    LEFT JOIN employee e ON t.employee_id = e.id
+		LEFT JOIN User u ON e.user_id = u.id
+    <where>
+        t.is_del=0 
+        <if test='trainer.id!=null and trainer.id!=0'>
+            and t.id=#{trainer.id}
+        </if>
+        <if test="trainer.specialty !=null and trainer.specialty !=''">
+			<bind value="'%'+ trainer.specialty +'%'" name="liketext"></bind>
+			and t.specialty like #{liketext}
+		</if>
+		<if test="trainer.user_name !=null and trainer.user_name !=''">
+			<bind value="'%'+ trainer.user_name +'%'" name="likenametext"></bind>
+			and u.name like #{likenametext}
+		</if>
+		<if test="page.page>=0 and page.size>0">
+			limit #{page.start},#{page.size}
+		</if>
+    </where>
+</select>
+	
+	
+</mapper>

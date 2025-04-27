@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.easy.dao.IFitnessPlanDao">
+
+
+	<insert id="addFitnessPlan" useGeneratedKeys="true" keyColumn="id" keyProperty="id">
+		insert into FitnessPlan(member_id,planDetails,creationDate,updateDate,record) 
+		value(#{member_id},#{planDetails},now(),now(),#{record})
+	</insert>
+	
+	<update id="delFitnessPlan">
+		update FitnessPlan set is_del=1 where id=#{id}
+	</update>
+	
+	<update id="editFitnessPlan">
+		update FitnessPlan 
+		<set>
+			updateDate=now(),
+			<if test='planDetails!=null and planDetails!=""'>
+				planDetails=#{planDetails},
+			</if>
+			<if test='creationDate !=null and creationDate !=""'>
+				creationDate=#{creationDate},
+			</if>
+			<if test='updateDate !=null and updateDate !=""'>
+				updateDate=#{updateDate},
+			</if>
+			<if test='record!=null and record!=""'>
+				record=#{record},
+			</if>
+		</set>
+		<where>
+		 	id=#{id} and is_del=0
+		</where>
+	</update>
+	
+	<select id="getFitnessPlan"  resultType="com.easy.bean.FitnessPlan">
+		select * from FitnessPlan
+		<where>
+			is_del=0
+			<if test='id!=null and id!=0'>
+				and id=#{id}
+			</if>
+			<if test='member_id!=null and member_id!=0'>
+				and member_id=#{member_id}
+			</if>
+		</where>
+	</select>
+	
+	
+	
+	
+</mapper>
